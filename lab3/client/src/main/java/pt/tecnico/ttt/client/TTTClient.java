@@ -2,6 +2,7 @@ package pt.tecnico.ttt.client;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 import pt.tecnico.ttt.*;
 import pt.tecnico.ttt.PlayResult;
 
@@ -98,11 +99,17 @@ public class TTTClient {
 					column = go % 3;
 					debug("row = " + row + ", column = " + column);
 
-					PlayResultRequest msgPlayResultRequest = PlayResultRequest.newBuilder().setColumn(column).setRow(row).setPlayer(player).build();
-					play_res = stub.playResult(msgPlayResultRequest).getPlResult();
-
-					if (play_res != PlayResult.SUCCESS) {
-						displayResult(play_res);
+					play_res = null;
+					try{
+						PlayResultRequest msgPlayResultRequest = PlayResultRequest.newBuilder().setColumn(column).setRow(row).setPlayer(player).build();
+						play_res = stub.playResult(msgPlayResultRequest).getPlResult();
+	
+						if (play_res != PlayResult.SUCCESS) {
+							displayResult(play_res);
+						}
+					}catch(StatusRuntimeException e){
+						System.out.println("Caught exception with description: " + 
+        					e.getStatus().getDescription());
 					}
 
 				} while (play_res != PlayResult.SUCCESS);

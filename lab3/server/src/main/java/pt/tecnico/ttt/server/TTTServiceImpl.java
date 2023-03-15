@@ -2,6 +2,7 @@ package pt.tecnico.ttt.server;
 
 import io.grpc.stub.StreamObserver;
 import pt.tecnico.ttt.*;
+import static io.grpc.Status.INVALID_ARGUMENT;
 
 public class TTTServiceImpl extends TTTGrpc.TTTImplBase {
 
@@ -21,20 +22,24 @@ public class TTTServiceImpl extends TTTGrpc.TTTImplBase {
 		responseObserver.onCompleted();
 	}
 
-
 	@Override
-	public void playResult(PlayResultRequest request, StreamObserver<PlayResultResponse> responseObserver){
+	public void playResult(PlayResultRequest request, StreamObserver<PlayResultResponse> responseObserver) {
 		PlayResult playResultResponse = ttt.play(request.getRow(), request.getColumn(), request.getPlayer());
 
-		PlayResultResponse response = PlayResultResponse.newBuilder().setPlResult(playResultResponse).build();
+		if (playResultResponse == PlayResult.OUT_OF_BOUNDS) {
+			responseObserver
+					.onError(INVALID_ARGUMENT.withDescription("Input has to be a valid position").asRuntimeException());
+		} else {
+			PlayResultResponse response = PlayResultResponse.newBuilder().setPlResult(playResultResponse).build();
 
-		responseObserver.onNext(response);
+			responseObserver.onNext(response);
 
-		responseObserver.onCompleted();
+			responseObserver.onCompleted();
+		}
 	}
 
 	@Override
-	public void checkWinner(CheckWinnerRequest request, StreamObserver<CheckWinnerResponse> responseObserver){
+	public void checkWinner(CheckWinnerRequest request, StreamObserver<CheckWinnerResponse> responseObserver) {
 		int winnerResponse = ttt.checkWinner();
 
 		CheckWinnerResponse response = CheckWinnerResponse.newBuilder().setWinner(winnerResponse).build();
