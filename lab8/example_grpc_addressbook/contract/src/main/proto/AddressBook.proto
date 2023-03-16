@@ -43,4 +43,5 @@ message AddPersonResponse {
 service AddressBookService {
   rpc listPeople(ListPeopleRequest) returns(AddressBookList);
   rpc addPerson(PersonInfo) returns (AddPersonResponse);
+  rpc searchPerson(SearchPersonRequest) returns (PersonInfo);
 }

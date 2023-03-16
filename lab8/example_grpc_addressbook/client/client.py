@@ -68,6 +68,20 @@ class PythonClient(object):
             print('Error: Please enter a valid number.')
         except grpc.RpcError as rpc_error:
             print('ERROR: code={}, description={}'.format(rpc_error.code(), rpc_error.details()))
+            
+    def search_person(self):
+        request = pb2.SearchPersonRequest()
+        request.email = input("Enter email: ")
+        
+        response = self.stub.searchPerson(request)
+        
+        print()
+        print("Name: " + response.name)
+        print("Email: " + response.email)
+        print("Phone type: " + str(response.phone.type))
+        print("Phone number: " + str(response.phone.number))
+        
+        
 
 
 def print_person(person):
@@ -113,7 +127,7 @@ if __name__ == '__main__':
             client.add_person()
         elif choice == '3':
             # TODO: implement searchPerson
-            print("searchPerson to be implemented")
+            client.search_person()
         elif choice == 'q':
             print("\nBye.")
         else:

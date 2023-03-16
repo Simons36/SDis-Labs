@@ -32,4 +32,19 @@ public class AddressBookServiceImpl extends AddressBookServiceImplBase {
             responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
         }
     }
+
+    
+    @Override
+    public void searchPerson(SearchPersonRequest request, StreamObserver<PersonInfo> responseObserver) {
+        try{
+            PersonInfo response = addressBook.searchPerson(request.getEmail());
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }catch(RuntimeException e){
+
+        }
+    }
+
+
 }

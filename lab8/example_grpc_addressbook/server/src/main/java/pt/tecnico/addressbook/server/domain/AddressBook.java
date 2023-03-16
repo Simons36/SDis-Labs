@@ -1,8 +1,10 @@
 package pt.tecnico.addressbook.server.domain;
 
 import pt.tecnico.addressbook.grpc.AddressBookList;
+import pt.tecnico.addressbook.grpc.PersonInfo.PhoneNumber;
 import pt.tecnico.addressbook.grpc.PersonInfo.PhoneType;
 import pt.tecnico.addressbook.server.domain.exception.DuplicatePersonInfoException;
+import pt.tecnico.addressbook.grpc.PersonInfo;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -24,5 +26,16 @@ public class AddressBook {
         return AddressBookList.newBuilder()
                 .addAllPeople(people.values().stream().map(Person::proto).collect(Collectors.toList()))
                 .build();
+    }
+
+    public PersonInfo searchPerson(String email){
+        Person person = people.get(email);
+
+        return PersonInfo.newBuilder().setEmail(email)
+                                      .setName(person.getName())
+                                      .setPhone(PhoneNumber.newBuilder().setNumber(person.getPhoneNumber())
+                                      .setType(person.getType()))
+                                      .build();
+
     }
 }
