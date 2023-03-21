@@ -60,14 +60,17 @@ class PythonClient(object):
         else:
             print("Unknown phone type; leaving as default value.")
             return
+    
 
         try:
             person.phone.number = int(input("Enter phone number: "))
+            person.birthday = input("Enter birthday: ")
             self.stub.addPerson(person)
         except ValueError:
             print('Error: Please enter a valid number.')
         except grpc.RpcError as rpc_error:
             print('ERROR: code={}, description={}'.format(rpc_error.code(), rpc_error.details()))
+            
             
     def search_person(self):
         request = pb2.SearchPersonRequest()
@@ -81,6 +84,23 @@ class PythonClient(object):
         print("Phone type: " + str(response.phone.type))
         print("Phone number: " + str(response.phone.number))
         
+    def search_birthday(self):
+        request = pb2.ListAllRequest()
+        request.birthday = input("Enter birthday: ")
+        
+        try:
+            response = self.stub.listAll(request)
+            print()
+            
+            for person in response.person:
+                print("Name: " + person.name)
+                print("Email: " + person.email)
+                print("Phone type: " + str(person.phone.type))
+                print("Phone number: " + str(person.phone.number))
+                print("Birthday: " + person.birthday)
+                print()
+        except grpc.RpcError as rpc_error:
+            print(rpc_error.details())
         
 
 
@@ -107,9 +127,11 @@ def get_user_choice():
     print("\n[1] See a list of addresses.")
     print("[2] Add person's address.")
     print("[3] Search person's address.")
+    print("[5] Search person's birthday.")
     print("[q] Quit.")
 
     return input("What would you like to do? ")
+
 
 
 if __name__ == '__main__':
@@ -128,6 +150,8 @@ if __name__ == '__main__':
         elif choice == '3':
             # TODO: implement searchPerson
             client.search_person()
+        elif choice == '5':
+            client.search_birthday()
         elif choice == 'q':
             print("\nBye.")
         else:

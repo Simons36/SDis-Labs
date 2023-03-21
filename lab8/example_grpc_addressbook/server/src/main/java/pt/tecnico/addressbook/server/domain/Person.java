@@ -8,12 +8,14 @@ public class Person {
     private String email;
     private int phoneNumber;
     private PhoneType type;
+    private String birthday;
 
-    public Person(String name, String email, int phoneNumber, PhoneType type) {
+    public Person(String name, String email, int phoneNumber, PhoneType type, String birthday) {
         this.name = name;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.type = type;
+        this.birthday = birthday;
     }
 
     public String getName() {
@@ -38,6 +40,13 @@ public class Person {
 
     public void setPhoneNumber(int phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+    public String getBirthday(){
+        return this.birthday;
+    }
+
+    public void setBirthday(String birthday){
+        this.birthday = birthday;
     }
 
     public PhoneType getType() {

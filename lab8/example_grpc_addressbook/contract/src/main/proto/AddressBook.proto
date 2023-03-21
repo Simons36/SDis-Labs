@@ -23,6 +23,8 @@ message PersonInfo {
   }
 
   PhoneNumber phone = 4;
+
+  string birthday = 5;
 }
 
 message AddressBookList {
@@ -40,8 +42,17 @@ message SearchPersonRequest {
 message AddPersonResponse {
 }
 
+message ListAllRequest{
+  string birthday = 1;
+}
+
+message ListAllResponse{
+  repeated PersonInfo person = 1;
+}
+
 service AddressBookService {
   rpc listPeople(ListPeopleRequest) returns(AddressBookList);
   rpc addPerson(PersonInfo) returns (AddPersonResponse);
   rpc searchPerson(SearchPersonRequest) returns (PersonInfo);
+  rpc listAll(ListAllRequest) returns (ListAllResponse);
 }

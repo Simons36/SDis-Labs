@@ -22,7 +22,7 @@ public class AddressBookServiceImpl extends AddressBookServiceImplBase {
     @Override
     public void addPerson(PersonInfo request, StreamObserver<AddPersonResponse> responseObserver) {
         try {
-            addressBook.addPerson(request.getName(), request.getEmail(), request.getPhone().getNumber(), request.getPhone().getType());
+            addressBook.addPerson(request.getName(), request.getEmail(), request.getPhone().getNumber(), request.getPhone().getType(), request.getBirthday());
             AddPersonResponse response = AddPersonResponse.getDefaultInstance();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
@@ -44,6 +44,25 @@ public class AddressBookServiceImpl extends AddressBookServiceImplBase {
         }catch(RuntimeException e){
 
         }
+    }
+
+    @Override
+    public void listAll(ListAllRequest request, StreamObserver<ListAllResponse> responseObserver) {
+        ListAllResponse.Builder response = ListAllResponse.newBuilder();
+        
+        try{
+
+            for(PersonInfo person :addressBook.listAll(request.getBirthday())){
+                response.addPerson(person);
+    
+            }
+            responseObserver.onNext(response.build());
+            responseObserver.onCompleted();
+
+        }catch(RuntimeException e){
+            responseObserver.onError(INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
+        }
+        
     }
 
 
