@@ -13,12 +13,21 @@ import javax.crypto.spec.SecretKeySpec;
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 import java.io.InputStream;
+import java.security.MessageDigest;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.SecretKey;
+import java.util.Arrays;
 
 
 
 public class SupplierClient {
 	
+	private static final String DIGEST_ALGO = "SHA-256";
+	
+	private static final String SYM_CIPHER = "AES/CBC/PKCS5Padding";
+
 	public static SecretKeySpec readKey(String resourcePathName) throws Exception {
 		System.out.println("Reading key from resource " + resourcePathName + " ...");
 		
@@ -83,6 +92,14 @@ public class SupplierClient {
 		// Make the call using the stub.
 		System.out.println("Remote call...");
 		SignedResponse response = stub.listProducts(request);
+		
+		boolean result = redigestDecipherAndCompare(response.getSignature().getValue().toByteArray(), response.getResponse().toByteArray(), readKey("server/src/main/resources/secret.key"));
+
+
+		if (result)
+			System.out.println("Signature is valid! Message accepted! :)");
+		else
+			System.out.println("Signature is invalid! Message rejected! :(");
 
 		// Print response.
 		System.out.println("Received response:");
@@ -95,5 +112,37 @@ public class SupplierClient {
 		// A Channel should be shutdown before stopping the process.
 		channel.shutdownNow();
 	}
+
+	private static boolean redigestDecipherAndCompare(byte[] cipherDigest, byte[] bytes, SecretKey key)
+			throws Exception {
+
+		// get a message digest object using the specified algorithm
+		MessageDigest messageDigest = MessageDigest.getInstance(DIGEST_ALGO);
+
+		// calculate the digest and print it out
+		messageDigest.update(bytes);
+		byte[] digest = messageDigest.digest();
+		System.out.println("New digest:");
+		System.out.println(printHexBinary(digest));
+
+		// get an AES cipher object
+		Cipher cipher = Cipher.getInstance(SYM_CIPHER);
+
+		// decipher digest using the public key
+		cipher.init(Cipher.DECRYPT_MODE, key);
+		byte[] decipheredDigest = cipher.doFinal(cipherDigest);
+		System.out.println("Deciphered Digest:");
+		System.out.println(printHexBinary(decipheredDigest));
+
+		// compare digests
+		if (digest.length != decipheredDigest.length)
+			return false;
+
+		for (int i = 0; i < digest.length; i++)
+			if (digest[i] != decipheredDigest[i])
+				return false;
+		return true;
+	}
+
 
 }

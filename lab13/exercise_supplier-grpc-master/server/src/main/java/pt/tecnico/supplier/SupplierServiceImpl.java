@@ -19,8 +19,24 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 import java.io.InputStream;
 
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.util.Arrays;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.Mac;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+
+import com.google.protobuf.ByteString;
+
 
 public class SupplierServiceImpl extends SupplierGrpc.SupplierImplBase {
+
+	private static final String DIGEST_ALGO = "SHA-256";
+
+	private static final String SYM_CIPHER = "AES/CBC/PKCS5Padding";
 
 	public static SecretKeySpec readKey(String resourcePathName) throws Exception {
 		System.out.println("Reading key from resource " + resourcePathName + " ...");
@@ -93,21 +109,41 @@ public class SupplierServiceImpl extends SupplierGrpc.SupplierImplBase {
 		}
 		ProductsResponse response = responseBuilder.build();
 
+		byte[] responseBytes = response.toByteArray();
+		responseFinal.setResponse(response);
 
-		debug("Response to send:");
-		debug(response.toString());
-		debug("in binary hexadecimals:");
-		byte[] responseBinary = response.toByteArray();
-		debug(printHexBinary(responseBinary));
-		debug(String.format("%d bytes%n", responseBinary.length));
+		byte[] iv = new byte[16];
+		// let the system pick a strong secure random generator
 
-		// send single response back
-		responseObserver.onNext(response);
-		// complete call
-		responseObserver.onCompleted();
+		try {
+			
+	
+			byte[] cypherDigest = digestAndCipher(responseBytes, readKey("/home/simaosilva/uni/SD/SDis-Labs/lab13/exercise_supplier-grpc-master/server/src/main/resources/secret.key"));
+	
+			Signature.Builder signature = Signature.newBuilder();
+			signature.setValue(ByteString.copyFrom(cypherDigest));
+			signature.setSignerId("server");
+			responseFinal.setSignature(signature.build());
+	
+			debug("Response to send:");
+			debug(response.toString());
+			debug("in binary hexadecimals:");
+			byte[] responseBinary = response.toByteArray();
+			debug(printHexBinary(responseBinary));
+			debug(String.format("%d bytes%n", responseBinary.length));
+	
+			// send single response back
+			responseObserver.onNext(responseFinal.build());
+			// complete call
+			responseObserver.onCompleted();
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println(e.getMessage());
+		}
+
 	}
 
-	private static byte[] digestAndCipher(byte[] bytes, SecretKey key, byte[] iv) throws Exception {
+	private static byte[] digestAndCipher(byte[] bytes, SecretKey key) throws Exception {
 
 		// get a message digest object using the specified algorithm
 		MessageDigest messageDigest = MessageDigest.getInstance(DIGEST_ALGO);
@@ -120,10 +156,8 @@ public class SupplierServiceImpl extends SupplierGrpc.SupplierImplBase {
 
 		// get an AES cipher object
 		Cipher cipher = Cipher.getInstance(SYM_CIPHER);
-
-		IvParameterSpec ips = new IvParameterSpec(iv);
 		// encrypt the plain text using the key
-		cipher.init(Cipher.ENCRYPT_MODE, key, ips);
+		cipher.init(Cipher.ENCRYPT_MODE, key);
 		byte[] cipherDigest = cipher.doFinal(digest);
 
 		return cipherDigest;
