@@ -14,6 +14,7 @@ import pt.tecnico.supplier.grpc.SupplierGrpc;
 import pt.tecnico.supplier.grpc.Signature;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.io.File;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
@@ -118,7 +119,7 @@ public class SupplierServiceImpl extends SupplierGrpc.SupplierImplBase {
 		try {
 			
 	
-			byte[] cypherDigest = digestAndCipher(responseBytes, readKey("/home/simaosilva/uni/SD/SDis-Labs/lab13/exercise_supplier-grpc-master/server/src/main/resources/secret.key"));
+			byte[] cypherDigest = digestAndCipher(responseBytes, readKey("secret.key"));
 	
 			Signature.Builder signature = Signature.newBuilder();
 			signature.setValue(ByteString.copyFrom(cypherDigest));

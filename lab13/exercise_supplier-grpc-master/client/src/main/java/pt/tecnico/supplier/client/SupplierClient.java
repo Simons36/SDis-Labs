@@ -93,7 +93,7 @@ public class SupplierClient {
 		System.out.println("Remote call...");
 		SignedResponse response = stub.listProducts(request);
 		
-		boolean result = redigestDecipherAndCompare(response.getSignature().getValue().toByteArray(), response.getResponse().toByteArray(), readKey("server/src/main/resources/secret.key"));
+		boolean result = redigestDecipherAndCompare(response.getSignature().getValue().toByteArray(), response.getResponse().toByteArray(), readKey("secret.key"));
 
 
 		if (result)
@@ -126,10 +126,10 @@ public class SupplierClient {
 		System.out.println(printHexBinary(digest));
 
 		// get an AES cipher object
-		Cipher cipher = Cipher.getInstance(SYM_CIPHER);
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 
 		// decipher digest using the public key
-		cipher.init(Cipher.DECRYPT_MODE, key);
+		cipher.init(Cipher.DECRYPT_MODE, readKey("secret.key"));
 		byte[] decipheredDigest = cipher.doFinal(cipherDigest);
 		System.out.println("Deciphered Digest:");
 		System.out.println(printHexBinary(decipheredDigest));
